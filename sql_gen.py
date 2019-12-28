@@ -43,8 +43,15 @@ class CommonDao:
     def generate_params(fields_names):
         return str(fields_names)[1:-1].replace('\'', '')
 
-    def generate_insert(self, table_name, auto_increment=False):
-        result = 'insert into ' + table_name + ' ( %s ) values ( %s );'
+    def generate_insert(self, table_name, auto_increment=False, ignore=False, replace=False):
+        assert (ignore and not replace) or (not ignore and replace) or (not ignore and not replace)
+        if ignore:
+            header = 'insert ignore into '
+        elif replace:
+            header = 'replace into '
+        else:
+            header = 'insert into '
+        result = header + table_name + ' ( %s ) values ( %s );'
         description = self.describe(table_name)
         fields = []
         for field in description:
@@ -63,11 +70,12 @@ class CommonDao:
     def generate_delete(self, table_name):
         pass
 
-    def generate_replace(self, table_name):
-        pass
-
     def __del__(self):
         self.connection.close()
+
+
+def init():
+    return CommonDao('localhost', 'root', 'root', 'sql_test')
 
 
 def main():
@@ -126,4 +134,13 @@ def test():
 
 if __name__ == '__main__':
     # main()
-    test()
+    # test()
+    dao = init()
+    print(dao.generate_insert('users', ignore=False, replace=False))
+    print(dao.generate_insert('users', ignore=False, replace=True))
+    print(dao.generate_insert('users', ignore=True, replace=False))
+    print(dao.generate_insert('users', ignore=True, replace=True))
+    print(dao.generate_insert('users', auto_increment=True, ignore=False, replace=False))
+    print(dao.generate_insert('users', auto_increment=True, ignore=False, replace=True))
+    print(dao.generate_insert('users', auto_increment=True, ignore=True, replace=False))
+    print(dao.generate_insert('users', auto_increment=True, ignore=True, replace=True))
