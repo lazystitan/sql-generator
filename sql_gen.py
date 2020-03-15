@@ -5,11 +5,22 @@ import pymysql.cursors
 
 
 class CommonDao:
-    connection = None
-    tables_description = {}
+    __connection = None
+    __tables_description = {}
 
     def __init__(self, host: str, user: str, password: str, dbname: str, charset: str = 'utf8mb4',
                  cursorclass: pymysql.cursors.Cursor = pymysql.cursors.DictCursor):
+        """
+
+        :param host: str
+        :param user: str
+        :param password: str
+        :param dbname: str
+        :param charset: str
+        :param cursorclass: Cursor
+
+        初始化连接，获取数据库信息
+        """
         config = {
             'host': host,
             'user': user,
@@ -19,8 +30,8 @@ class CommonDao:
             'cursorclass': cursorclass
         }
         print(config)
-        self.connection = pymysql.connect(**config)
-        with self.connection.cursor() as c:
+        self.__connection = pymysql.connect(**config)
+        with self.__connection.cursor() as c:
             sql = 'show tables;'
             c.execute(sql)
             tables_name = c.fetchall()
@@ -28,14 +39,14 @@ class CommonDao:
                 table_name = list(table_name_pre.values())[0]
                 sql = 'describe ' + table_name + ';'
                 c.execute(sql)
-                self.tables_description[table_name] = c.fetchall()
+                self.__tables_description[table_name] = c.fetchall()
 
-    def tables_name(self):
-        return list(self.tables_description.keys())
+    def get_tables_name(self):
+        return list(self.__tables_description.keys())
 
-    def describe(self, table_name):
+    def get_describe(self, table_name : str):
         try:
-            return self.tables_description[table_name]
+            return self.__tables_description[table_name]
         except KeyError:
             return None
 
@@ -71,76 +82,23 @@ class CommonDao:
         pass
 
     def __del__(self):
-        self.connection.close()
+        self.__connection.close()
 
 
 def init():
-    return CommonDao('localhost', 'root', 'root', 'sql_test')
+    return CommonDao('localhost', 'root', '', 'lambkingo')
 
+
+class CommonDateTime:
+    def __init__(self):
+        pass
 
 def main():
-    email_tail = ['test.com', '163.com', 'outlook.com', 'gmail.com',
-                  '126.com', 'qq.com', 'sina.com', 'shu.edu.com', '186.com',
-                  'sohu.com', 'tetx.com', 'simple.com']
-    dao = CommonDao('localhost', 'root', 'root', 'sql_test')
-    print(dao.tables_name())
-    print(dao.describe('users'))
-    insert_sql = dao.generate_insert('users')
-    with open('English_Names_Corpus（2W）.txt', 'r', encoding='utf8') as f:
-        f.readline()
-        f.readline()
-        f.readline()
-        names = f.readlines()
-
-    names = [name.strip() for name in names]
-    users = []
-    m = md5()
-    for name in names:
-        m.update(str(randint(100000, 999999 + 1)).encode('utf-8'))
-        pswd = m.hexdigest()
-        temp = (name + '@' + email_tail[randint(0, len(email_tail) - 1)], pswd)
-        users.append(temp)
-    config = {'host': 'localhost',
-              'user': 'root',
-              'password': 'root',
-              'db': 'sql_test',
-              'charset': 'utf8mb4',
-              'cursorclass': pymysql.cursors.DictCursor}
-
-    print(insert_sql)
-    print(len(users))
-    conn = pymysql.connect(**config)
-    with conn.cursor() as c:
-        c.executemany(insert_sql, users)
-    conn.commit()
-    conn.close()
-
-
-def test():
-    config = {'host': 'localhost',
-              'user': 'root',
-              'password': 'root',
-              'db': 'sql_test',
-              'charset': 'utf8mb4',
-              'cursorclass': pymysql.cursors.DictCursor}
-
-    conn = pymysql.connect(**config)
-    c = conn.cursor()
-    c.execute('select count(*) as count from users')
-    res = c.fetchall()
-    print(res)
-    conn.close()
+    dao = init()
+    rs = dao.get_describe('goods')
+    for p in rs:
+        print(p)
 
 
 if __name__ == '__main__':
-    # main()
-    # test()
-    dao = init()
-    print(dao.generate_insert('users', ignore=False, replace=False))
-    print(dao.generate_insert('users', ignore=False, replace=True))
-    print(dao.generate_insert('users', ignore=True, replace=False))
-    print(dao.generate_insert('users', ignore=True, replace=True))
-    print(dao.generate_insert('users', auto_increment=True, ignore=False, replace=False))
-    print(dao.generate_insert('users', auto_increment=True, ignore=False, replace=True))
-    print(dao.generate_insert('users', auto_increment=True, ignore=True, replace=False))
-    print(dao.generate_insert('users', auto_increment=True, ignore=True, replace=True))
+    main()
