@@ -1,3 +1,4 @@
+import datetime
 from random import random, randint
 from hashlib import md5
 
@@ -44,7 +45,7 @@ class CommonDao:
     def get_tables_name(self):
         return list(self.__tables_description.keys())
 
-    def get_describe(self, table_name : str):
+    def get_describe(self, table_name: str):
         try:
             return self.__tables_description[table_name]
         except KeyError:
@@ -90,14 +91,48 @@ def init():
 
 
 class CommonDateTime:
-    def __init__(self):
-        pass
+    __start = None
+    __end = None
+    __step = None
 
-def main():
+    def __has_inited(self):
+        if self.__start is not None and self.__end is not None and self.__step is not None:
+            return True
+        else:
+            return False
+
+    def __init__(self, start_datetime: datetime.datetime, end_datetime: datetime.datetime, step: datetime.timedelta):
+        if not self.__has_inited():
+            self.__start = start_datetime
+            self.__end = end_datetime
+            self.__step = step
+
+    def generate_datetimes(self):
+        assert self.__has_inited()
+        temp = self.__start
+        rs = [temp.__format__('%Y-%m-%d %H:%M:%S')]
+        while temp < self.__end:
+            temp = temp + self.__step
+            rs.append(temp.__format__('%Y-%m-%d %H:%M:%S'))
+        return rs
+
+
+def test1():
     dao = init()
     rs = dao.get_describe('goods')
     for p in rs:
         print(p)
+
+
+def test2():
+    dt = CommonDateTime(datetime.datetime(2020, 1, 1), datetime.datetime.now(), datetime.timedelta(hours=1))
+    dts = dt.generate_datetimes()
+    for t in dts:
+        print(t)
+
+
+def main():
+    test2()
 
 
 if __name__ == '__main__':
